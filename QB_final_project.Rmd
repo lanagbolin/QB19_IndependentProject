@@ -198,6 +198,74 @@ abline(lm(percent.invasive ~ time.since.planting), col="blue")
 summary(lm(percent.invasive ~ time.since.planting))  # P = 0.23
 ```
 
+## BAR PLOTS
+
+```{r}
+# Make a new dataframe with Site, Mulch, and Litter, and Richness
+Mulch <- as.factor(sbs.factors$MULCH)
+Weediness <- as.factor(sbs.factors$WEEDINESS)
+Litter <- sbs.factors$LITTER
+Site <- c("Athenaeum", "Bauman.Park", "Center.for.Inquiry", "Chinqpin.Oak.Park", 
+"Community.Caring...Sharing", "Cottage.Home", "Englewood", "Fletcher.Gateway", 
+"Fletcher.Park", "Historic.Meridian.Park", "Jonathan.Jennings", 
+"Lynhurst", "Merrill.Street", "Paramount.Charter", "Purpose.Park", 
+"Ransom.Place", "Skiles.Test", "University.Park", "Westminster", 
+"Willard.Park")
+
+df <- data.frame(Site = Site, Mulch = Mulch, Litter = Litter, Weediness = Weediness, Richness = colSums(crawley.df))
+
+# Function to calculate sd
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+```
+
+### Mulch
+```{r}
+# Here's my mulch data frame to use for my plot
+df.mulch <- data_summary(df, varname = "Richness", 
+                    groupnames = c("Mulch"))
+
+df.mulch %>% ggplot(aes(x = Mulch, y = Richness)) + 
+  geom_bar(stat="identity", color="black") +
+  geom_errorbar(aes(ymin = Richness - sd, ymax = Richness + sd), width = .2,
+                 position=position_dodge(.9)) +
+  theme(text = element_text(size = 25, face = "bold")) +
+  theme(axis.text = element_text(size = 15, face = "bold"))
+png(filename = "Mulch.richness.png")
+
+mulch.aov <- aov(df$Richness ~ df$Mulch)
+summary(mulch.aov)
+
+```
+
+
+### Weediness
+```{r}
+# Here's my weediness data frame to use for my plot
+df.weediness <- data_summary(df, varname = "Richness", 
+                    groupnames = c("Weediness"))
+
+df.weediness %>% ggplot(aes(x = Weediness, y = Richness)) + 
+  geom_bar(stat="identity", color="black") +
+  geom_errorbar(aes(ymin = Richness - sd, ymax = Richness + sd), width = .2,
+                 position=position_dodge(.9)) +
+  theme(text = element_text(size = 25, face = "bold")) +
+  theme(axis.text = element_text(size = 15, face = "bold"))
+png(filename = "Weediness.richness.png")
+
+weediness.aov <- aov(df$Richness ~ df$Weediness)
+summary(weediness.aov)
+```
 
 
 
